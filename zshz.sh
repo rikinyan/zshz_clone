@@ -1,9 +1,38 @@
 #!/bin/sh
+file_data=history
 
-add_history() {
+line2path() {
+    line=$1
+    candidate=$(echo "$line" | cut -d "|" -f 1)
+    echo "$candidate"
+}
+
+line2access_time() {
+    line=$1
+    access_time=$(echo "$line" | cut -d "|" -f 2)
+    echo "$access_time"
+}
+
+add_or_update_history() {
     added_path=$1
+    new_access_time=$2
+    file_lines=$(cat $file_data | tr "\n" " ")
 
-    
+    new_updated_file_date=""
+    for line in $file_lines
+    do
+        path=$(line2path $line)
+        access_time=$(line2access_time $line)
+
+        if [ "$path" != "$added_path" ]
+        then
+            new_updated_file_date="${new_updated_file_date}${path}|${access_time}\n"
+        fi
+    done       
+
+    new_updated_file_date="${new_updated_file_date}${added_path}|${access_time}\n"
+
+    echo "$new_updated_file_date" > $file_data
 }
 
 jump()
@@ -20,9 +49,8 @@ jump()
     best_candidate_time=0
     for line in $file_lines
     do
-        candidate=$(echo "$line" | cut -d "|" -f 1)
-        access_time=$(echo "$line" | cut -d "|" -f 2)
-        echo $candidate $access_time
+        candidate=$(line2path $line)
+        access_time=$(line2access_time $line)
 
         # pattern match for following POSIX
         # https://www.shellcheck.net/wiki/SC3015
@@ -38,8 +66,10 @@ jump()
     # cd
     if [ -d "$best_candidate" ]
     then
-        echo cd "$best_candidate" || exit
+        (echo cd "$best_candidate"; add_or_update_history "$best_candidate" "$(date +%s)") || exit
     else
         echo "no candidate in cd history"
     fi
 }
+
+jump Desktop
