@@ -21,8 +21,8 @@ add_or_update_history() {
     new_updated_file_date=""
     for line in $file_lines
     do
-        path=$(line2path $line)
-        access_time=$(line2access_time $line)
+        path=$(line2path "$line")
+        access_time=$(line2access_time "$line")
 
         if [ "$path" != "$added_path" ]
         then
@@ -30,7 +30,7 @@ add_or_update_history() {
         fi
     done       
 
-    new_updated_file_date="${new_updated_file_date}${added_path}|${access_time}\n"
+    new_updated_file_date="${new_updated_file_date}${added_path}|${new_access_time}\n"
 
     echo "$new_updated_file_date" > $file_data
 }
@@ -49,8 +49,8 @@ jump()
     best_candidate_time=0
     for line in $file_lines
     do
-        candidate=$(line2path $line)
-        access_time=$(line2access_time $line)
+        candidate=$(line2path "$line")
+        access_time=$(line2access_time "$line")
 
         # pattern match for following POSIX
         # https://www.shellcheck.net/wiki/SC3015
