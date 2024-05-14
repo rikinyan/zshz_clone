@@ -35,8 +35,7 @@ add_or_update_history() {
     echo "$new_updated_file_date" > $file_data
 }
 
-jump()
-{
+jump() {
     [ $# = 0 ] && (cd || exit)
 
     search_pattern="$1"
@@ -72,4 +71,26 @@ jump()
     fi
 }
 
-jump Desktop
+## main scripts
+if ! args=$(getopt l "$@")
+then
+    exit 1
+fi
+
+set -- $args
+
+while [ $# -gt 0 ]
+do
+    case $1 in
+        -l)
+            cat "$file_data"
+            shift
+            ;;
+        --)
+            shift
+            break
+            ;;
+        esac
+done
+
+ jump $1
