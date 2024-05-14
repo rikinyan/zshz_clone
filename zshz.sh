@@ -72,6 +72,8 @@ jump() {
 }
 
 ## main scripts
+
+# parse options
 if ! args=$(getopt l "$@")
 then
     exit 1
