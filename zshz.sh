@@ -1,4 +1,3 @@
-#!/bin/sh
 file_data=history
 
 line2path() {
@@ -72,27 +71,23 @@ jump() {
 }
 
 ## main scripts
+#autoload -Uz add-zsh-hook
+#add-zsh-hook chpwd add_or_update_history
 
 # parse options
-if ! args=$(getopt l "$@")
-then
-    exit 1
-fi
-
-set -- $args
-
-while [ $# -gt 0 ]
+while getopts :l opt 2> /dev/null
 do
-    case $1 in
-        -l)
+    case $opt in
+        l)
             cat "$file_data"
-            shift
             ;;
-        --)
-            shift
-            break
+        \?)
+            echo "unexpected opt: $OPTARG"
+            exit 1
             ;;
-        esac
+    esac
 done
 
- jump $1
+shift "$(expr $OPTIND - 1)"
+
+jump "$1"
