@@ -24,14 +24,13 @@ add_or_update_history() {
     new_updated_file_date=""
     for line in $file_lines
     do
-        path=$(line2path "$line")
+        dir_path=$(line2path "$line")
         access_time=$(line2access_time "$line")
-        echo $path $access_time
-        if [ -z $path ] || [ -z $access_time ] && continue
+        if [ -z $dir_path ] || [ -z $access_time ] && continue
 
-        if [ "$path" != "$added_path" ]
+        if [ "$dir_path" != "$added_path" ]
         then
-            new_updated_file_date="${new_updated_file_date}${path}|${access_time}\n"
+            new_updated_file_date="${new_updated_file_date}${dir_path}|${access_time}\n"
         fi
     done
 
