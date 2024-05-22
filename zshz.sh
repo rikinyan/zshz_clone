@@ -34,7 +34,7 @@ add_or_update_history() {
         fi
     done
 
-    new_updated_file_date="${new_updated_file_date}${added_path}|${new_access_time}\n"
+    new_updated_file_date="${new_updated_file_date}${added_path}|${new_access_time}"
 
     echo "$new_updated_file_date" > $file_data
 }
