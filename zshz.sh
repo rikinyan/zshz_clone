@@ -2,19 +2,19 @@
 
 file_data=history
 
-line2path() {
+_jump_line2path() {
     line=$1
     candidate=$(echo "$line" | cut -d "|" -f 1)
     echo "$candidate"
 }
 
-line2access_time() {
+_jump_line2access_time() {
     line=$1
     access_time=$(echo "$line" | cut -d "|" -f 2)
     echo "$access_time"
 }
 
-add_or_update_history() {
+_jump_add_or_update_history() {
     setopt LOCAL_OPTIONS SH_WORD_SPLIT
 
     added_path=$1
@@ -24,8 +24,8 @@ add_or_update_history() {
     new_updated_file_date=""
     for line in $file_lines
     do
-        dir_path=$(line2path "$line")
-        access_time=$(line2access_time "$line")
+        dir_path=$(_jump_line2path "$line")
+        access_time=$(_jump_ine2access_time "$line")
         if [ -z $dir_path ] || [ -z $access_time ] && continue
 
         if [ "$dir_path" != "$added_path" ]
@@ -53,8 +53,8 @@ jump() {
     best_candidate_time=0
     for line in $file_lines
     do
-        candidate=$(line2path "$line")
-        access_time=$(line2access_time "$line")
+        candidate=$(_jump_line2path "$line")
+        access_time=$(_jump_line2access_time "$line")
 
         # pattern match for following POSIX
         # https://www.shellcheck.net/wiki/SC3015
@@ -70,20 +70,19 @@ jump() {
     # cd
     if [ -d "$best_candidate" ]
     then
-        (echo cd "$best_candidate"; add_or_update_history "$best_candidate" "$(date +%s)") || exit
+        (echo cd "$best_candidate"; _jump_add_or_update_history "$best_candidate" "$(date +%s)") || exit
     else
         echo "no candidate in cd history"
     fi
 }
 
-add_or_pwd_to_history() {
-    echo "update file"
-    add_or_update_history $(pwd) $(date +%s)
+_jump_add_or_pwd_to_history() {
+    _jump_add_or_update_history $(pwd) $(date +%s)
 }
 
 ## main scripts
 autoload -Uz add-zsh-hook
-add-zsh-hook chpwd add_or_pwd_to_history
+add-zsh-hook chpwd _jump_add_or_pwd_to_history
 
 # parse options
 while getopts :l opt 2> /dev/null
@@ -100,5 +99,4 @@ do
 done
 
 shift "$(expr $OPTIND - 1)"
-
 jump "$1"
