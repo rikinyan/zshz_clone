@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/sh
 
 file_data=history
 
@@ -14,27 +14,40 @@ _jump_line2access_time() {
     echo "$access_time"
 }
 
+_jump_line2access_rank() {
+    line=$1
+    rank=$(echo "$line" | cut -d "|" -f 3)
+    echo "$rank"
+}
+
 _jump_add_or_update_history() {
     setopt LOCAL_OPTIONS SH_WORD_SPLIT
 
     added_path=$1
     new_access_time=$2
+
     file_lines=$(cat $file_data)
 
     new_updated_file_date=""
+    added_path_current_rank="0"
     for line in $file_lines
     do
         dir_path=$(_jump_line2path "$line")
         access_time=$(_jump_ine2access_time "$line")
-        if [ -z $dir_path ] || [ -z $access_time ] && continue
+        rank=$(_jump_line2access_rank "$line")
+        if [ -z "$dir_path" ] || [ -z "$access_time" ]
+        then
+            continue
+        fi 
 
         if [ "$dir_path" != "$added_path" ]
         then
-            new_updated_file_date="${new_updated_file_date}${dir_path}|${access_time}\n"
+            new_updated_file_date="${new_updated_file_date}${dir_path}|${access_time}|${rank}\n"
+        else 
+            added_path_current_rank=${rank}
         fi
     done
-
-    new_updated_file_date="${new_updated_file_date}${added_path}|${new_access_time}"
+    new_updated_file_date="${new_updated_file_date}${added_path}|${new_access_time}|$(added_path_current_rank + 1)"
 
     echo "$new_updated_file_date" > $file_data
 }
