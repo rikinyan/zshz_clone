@@ -71,26 +71,48 @@ jump() {
     [ $# != 1 ] && (cd || exit)
 
     search_pattern="$1"
-    # method=${2:=frecency}
+    method=${2:-frecency}
 
     file_data=history
     file_lines=$(cat $file_data)
 
     # get cd's candidate
     best_candidate=0
-    best_candidate_time=0
+    best_candidate_score=0
     for line in $file_lines
     do
         candidate=$(_jump_line2path "$line")
         access_time=$(_jump_line2access_time "$line")
+        rank=$(_jump_line2access_rank "$line")
+
+        case $method in
+            frecency) 
+                candidate_score=$(_jump_calc_frecency "$access_time" "$rank")
+                ;;
+            
+            recency)
+                candidate_score="$access_time"
+                ;;
+
+            frequency)
+                candidate_score="$rank"
+                ;;
+
+            *)
+                echo "invalid matching method"
+                exit 1
+                ;;
+        esac
 
         # pattern match for following POSIX
         # https://www.shellcheck.net/wiki/SC3015
-        ! expr "X${candidate}" : "X.*${search_pattern}.*" >/dev/null && continue
+        ! expr "X${candidate}" : "X.*${search_pattern}.*" >/dev/null && continue        
 
-        if [ "$best_candidate_time" = "0" ] || [ "$best_candidate_time" -lt "$access_time" ]
+
+        candidate_comparison_equation="$best_candidate_score < $candidate_score"
+        if [ "$best_candidate_score" = "0" ] || [ "$(echo "$candidate_comparison_equation" | bc)" ]
         then
-            best_candidate_time=$access_time
+            best_candidate_score=$access_time
             best_candidate=$candidate
         fi
     done
