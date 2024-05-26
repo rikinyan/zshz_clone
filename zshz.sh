@@ -20,8 +20,21 @@ _jump_line2access_rank() {
     echo "$rank"
 }
 
+# About frecency: https://udn.realityripple.com/docs/Mozilla/Tech/Places/Frecency_algorithm
+# this frecency algorithm was optimized by dcervenkov. (https://github.com/rupa/z/issues/248)
+# NOTE: Use bc command for comparing frecencies. Frecency is decimal.
+_jump_calc_frecency() {
+    last_access_time=$1
+    rank=$2
+
+    current_time=$(date +%s) 
+    dt=$((current_time - last_access_time))
+
+    echo "$rank * (3.75/((0.0001 * $dt + 1) + 0.25))" | bc
+}
+
 _jump_add_or_update_history() {
-    setopt LOCAL_OPTIONS SH_WORD_SPLIT
+    setopt LOCAL_OPTIONS SH_WORD_SPLIT 2> /dev/null
 
     added_path=$1
     new_access_time=$2
@@ -33,8 +46,9 @@ _jump_add_or_update_history() {
     for line in $file_lines
     do
         dir_path=$(_jump_line2path "$line")
-        access_time=$(_jump_ine2access_time "$line")
+        access_time=$(_jump_line2access_time "$line")
         rank=$(_jump_line2access_rank "$line")
+
         if [ -z "$dir_path" ] || [ -z "$access_time" ]
         then
             continue
@@ -47,16 +61,17 @@ _jump_add_or_update_history() {
             added_path_current_rank=${rank}
         fi
     done
-    new_updated_file_date="${new_updated_file_date}${added_path}|${new_access_time}|$(added_path_current_rank + 1)"
+    new_updated_file_date="${new_updated_file_date}${added_path}|${new_access_time}|$((added_path_current_rank + 1))"
 
     echo "$new_updated_file_date" > $file_data
 }
 
 jump() {
-    setopt LOCAL_OPTIONS SH_WORD_SPLIT
+    setopt LOCAL_OPTIONS SH_WORD_SPLIT 2> /dev/null
     [ $# != 1 ] && (cd || exit)
 
     search_pattern="$1"
+    # method=${2:=frecency}
 
     file_data=history
     file_lines=$(cat $file_data)
@@ -90,12 +105,12 @@ jump() {
 }
 
 _jump_add_or_pwd_to_history() {
-    _jump_add_or_update_history $(pwd) $(date +%s)
+    _jump_add_or_update_history "$(pwd)" "$(date +%s)"
 }
 
 ## main scripts
-autoload -Uz add-zsh-hook
-add-zsh-hook chpwd _jump_add_or_pwd_to_history
+# autoload -Uz add-zsh-hook
+# add-zsh-hook chpwd _jump_add_or_pwd_to_history
 
 # parse options
 while getopts :l opt 2> /dev/null
@@ -111,5 +126,5 @@ do
     esac
 done
 
-shift "$(expr $OPTIND - 1)"
+shift "$((OPTIND - 1))"
 jump "$1"
